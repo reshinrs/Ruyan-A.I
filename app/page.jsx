@@ -1,16 +1,33 @@
 "use client";
 import { assets } from "@/assets/assets";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Sidebar from "./components/Sidebar";
 import Promptbox from  "./components/Promptbox";
 import Message from"./components/Message"
-import { Content } from "next/font/google";
+import { useAppContext } from "./context/AppContext";
+
 
 export default function Home() {
   const [expand, setExpand] = useState(false);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsloading] = useState(false);
+  const {selectedChat}=useAppContext()
+  const containerRef=useRef(null)
+
+  useEffect(()=>{
+    if(selectedChat){
+      setMessages(selectedChat.messages)
+    }
+  },[selectedChat])
+  useEffect(()=>{
+    if(containerRef.current){
+    containerRef.current.scrollTO({
+      top:containerRef.current.scrollHeight,
+      behavior:"smooth",
+    })
+    }
+  },[containerRef])
   return (
     <div>
       <div className="flex h-screen">
@@ -36,8 +53,24 @@ export default function Home() {
               </div>
             </>
           ) : (
-            <div>
-              <Message role='user' content='what is next js'/>
+            <div ref={containerRef} className="relative flex flex-col items-center justify-start w-full mt-20 max-h-screen overflow-y-auto">
+              <p className="fixed top-8 border border-transparent hover:bo-gr500/50 py1 px2 rounded-lg font-semibold mb-6">{selectedChat.name}</p>
+              {
+                messages.map((msg,index)=>(
+                  <Message key={index} role={msg.role}  content={msg.content}/>
+                ))
+              }
+              {isLoading &&(
+                <div className="flex gap-4 max-w-3xl w-full py-3">
+                  <Image className="h-9 w-9 p-1 border border-white/15 rounded-full " src={assets.ruyan_icon} alt="logo"/>
+                  <div className="loader flex justify-center items-center' gap-1">
+                    <div className="w-1 h-1 rounded-lg bgwhite animate-bounce"> </div>
+                    <div className="w-1 h-1 rounded-lg bgwhite animate-bounce"> </div>
+                    <div className="w-1 h-1 rounded-lg bgwhite animate-bounce"> </div>
+                    </div>
+                </div>
+              )}
+
             </div>
           )}
           <Promptbox isLoading={isLoading} setIsloading={setIsloading} />
